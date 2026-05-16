@@ -1,0 +1,4 @@
+Core/.venv/
+Supporting/.venv/
+.vscode/
+**/__pycache__/
