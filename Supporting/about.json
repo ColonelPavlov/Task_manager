@@ -1,0 +1,14 @@
+{
+  "project_name": "Murkoff Task Manager",
+  "version": "0.1.0-alpha",
+  "description": "Секретный терминал учёта времени и контроля задач сотрудников Murkoff Corporation.",
+  "research_center": "Sinyala Facility",
+  "development_team": {
+    "backend_engineer": "an-oxidizer",
+    "database_and_devsecops": "ColonelPavlov",
+    "frontend_developer": "DieVox-Rus",
+    "lead_scrum_master": "CAPtain_StarCat",
+    "qa_engineer": "Y_M_A"
+  },
+  "system_status": "CLASSIFIED"
+}

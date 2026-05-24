@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"name": "WHOLE PROJECT",
+            "path": "."
+        },
+		{
+			"name": "Core(FastAPI)",
+            "path": "Core",
+			"settings": {
+				"python.defaultInterpreterPath": "./.venv/Scripts/python.exe"
+			}
+        },
+        {
+            "name": "Supporting(Flask)",
+            "path": "Supporting",
+			"settings": {
+				"python.defaultInterpreterPath": "./.venv/Scripts/python.exe"
+			}
+		}
+	],
+	"settings": {}
+}
