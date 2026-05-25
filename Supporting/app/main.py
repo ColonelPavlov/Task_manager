@@ -16,5 +16,5 @@ def home_page():
         "message": "Система аналитики и шлюза Murkoff Corporation запущена"
     })
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(port=5001, debug=True)  # macOS, отдай 5000
