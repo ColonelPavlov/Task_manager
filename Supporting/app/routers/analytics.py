@@ -1,19 +1,55 @@
 import os
 import json
+import pymysql
 from flask import Blueprint, jsonify
+from dotenv import load_dotenv
+
+load_dotenv()
 
 analytics_bp = Blueprint("analytics", __name__, url_prefix="/api/v1/supporting")
 
+def get_db_connection():
+    return pymysql.connect(
+        host=os.getenv("DB_HOST", "127.0.0.1"),
+        user=os.getenv("DB_USER", "change_me"),
+        password=os.getenv("DB_PASS", "change_me"),
+        database=os.getenv("DB_NAME", "change_me"),
+        port=int(os.getenv("DB_PORT", 3306)),
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
 @analytics_bp.route("/analytics", methods=["GET"])
 def get_analytics():
-    # TODO: for [Backend(Я)] В будущем здесь будет сбор данных из базы данных
-    # Сколько сотрудников онлайн, сколько задач выполнено и всякие штучки в json формате.
-    return jsonify({
-        "total_employees": 5,  # Где помощь?!
-        "active_experiments": 2,  # Сервиса потому что два
-        "system_status": "SECURE",  # А как иначе?
-        "security_breaches_detected": 0  # DevSecOps в чате?
-    })
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+
+            cursor.execute("SELECT COUNT(*) AS total FROM users")
+            total_users = cursor.fetchone()["total"]
+
+            cursor.execute("SELECT SUM(hours_spent) AS total_hours FROM time_tracking")
+            result_hours = cursor.fetchone()
+            total_hours = result_hours["total_hours"] if result_hours and result_hours["total_hours"] else 0
+
+            cursor.execute("SELECT COUNT(*) AS total_tasks FROM tasks")
+            total_tasks = cursor.fetchone()["total_tasks"]
+
+        connection.close()
+
+        return jsonify({
+            "status": "success",
+            "total_employees": total_users,
+            "total_hours_spent": total_hours,
+            "total_tasks_created": total_tasks,
+            "system_status": "SECURE",
+            "security_breaches_detected": 0
+        })
+    
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+        }), 500
 
 @analytics_bp.route("/about", methods=["GET"])
 def get_about_info():
