@@ -2,8 +2,8 @@ import jwt
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from app.config import settings
-from fastapi import Security, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import HTTPException, status
+
 
 SECRET_KEY = settings.JWT_SECRET_KEY
 ALGORITHM = settings.JWT_ALGORITHM
@@ -43,7 +43,7 @@ async def get_current_user_double_check(db, credentials) -> str:
     
     # ЧЕК 2: Быстрый запрос в MySQL
     async with db.cursor() as cursor:
-        await cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
+        await cursor.execute("SELECT user_id, username FROM users WHERE username = %s", (username,))
         user_exists = await cursor.fetchone()
 
     if not user_exists:
@@ -52,4 +52,4 @@ async def get_current_user_double_check(db, credentials) -> str:
             detail="Доступ запрещён: пользователь удалён или заблокирован"
         )
     
-    return username
+    return user_exists[0], user_exists[1]
