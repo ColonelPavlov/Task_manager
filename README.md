@@ -1,14 +1,18 @@
 # Планировщик задач (Task Manager) 📋⏱️
 
-**Task Manager** — это Full Stack web-приложение с элементами микросервисной архитектуры для управления личными и командными задачами. Проект помогает организовать рабочий процесс, контролировать дедлайны и отслеживать прогресс выполнения задач через удобный REST API и систему аналитики.
+**Task Manager** — это Full Stack web-приложение с элементами микросервисной архитектуры для управления личными и командными задачами.
 
-Проект разработан в рамках курса по базам данных и включает:
-- FastAPI Core Service;
-- Flask Supporting Service;
-- SQL базу данных без ORM;
-- JWT авторизацию;
-- CRUD операции;
-- аналитику и вспомогательные сервисы.
+Проект помогает:
+- организовывать рабочий процесс;
+- контролировать дедлайны;
+- отслеживать прогресс выполнения задач;
+- управлять проектами и тегами;
+- вести аналитику активности пользователей.
+
+Проект разработан в рамках курса по базам данных и backend-разработке.
+
+Репозиторий проекта:  
+:contentReference[oaicite:0]{index=0}
 
 ---
 
@@ -21,24 +25,38 @@
 - Приоритеты задач;
 - Удаление и редактирование задач.
 
+---
+
 ## Гибкая организация
 - Группировка задач по проектам;
 - Использование тегов;
 - Фильтрация и сортировка задач.
 
-## Канбан-доска
-Поддержка Drag-and-Drop логики для визуального управления задачами:
+---
+
+## Kanban / Drag-and-Drop
+Система поддерживает Kanban-логику для визуального управления задачами:
+
+```text
+TODO → IN PROGRESS → DONE
+```
+
+Статусы задач:
 - Нужно сделать;
 - В процессе;
 - Готово;
 - Отложено.
 
-## Аналитика
-Supporting Service предоставляет:
-- системную аналитику;
+---
+
+## Аналитика и Supporting Service
+Flask Supporting Service предоставляет:
+- analytics endpoint;
 - hash endpoint;
 - about endpoint;
-- дополнительные API.
+- дополнительные сервисные API.
+
+---
 
 ## Безопасность
 - JWT авторизация;
@@ -48,9 +66,45 @@ Supporting Service предоставляет:
 
 ---
 
+# Архитектура проекта 🏗️
+
+```text
+Client
+   ↓
+FastAPI Core Service
+   ↓
+MySQL Database
+   ↓
+Flask Supporting Service
+```
+
+---
+
+# Core Service — FastAPI ⚡
+
+Отвечает за:
+- регистрацию пользователей;
+- авторизацию;
+- CRUD операции;
+- работу с задачами;
+- бизнес-логику;
+- JWT.
+
+---
+
+# Supporting Service — Flask 🧩
+
+Отвечает за:
+- аналитику;
+- about endpoint;
+- SHA256 hash service;
+- вспомогательные API.
+
+---
+
 # Модели данных (Сущности) 🗂️
 
-## Пользователь (User)
+## User
 
 Поля:
 - username
@@ -63,29 +117,29 @@ Supporting Service предоставляет:
 
 ---
 
-## Проект (Project)
+## Project
 
-Объединяет задачи в группы.
+Объединяет задачи в проекты.
 
 Поля:
-- Название;
-- Дата создания;
-- Владелец проекта.
+- name
+- created_at
+- user_id
 
 ---
 
-## Задача (Task)
+## Task
 
 Основная сущность системы.
 
 Поля:
-- Название;
-- Описание;
-- Deadline;
-- Статус;
-- Приоритет;
-- Проект;
-- Теги.
+- title
+- description
+- deadline
+- priority
+- status
+- project_id
+- tag_id
 
 Статусы:
 - new
@@ -100,127 +154,37 @@ Supporting Service предоставляет:
 
 ---
 
-## Тег (Tag)
+## Tag
 
 Используется для гибкой категоризации задач.
 
 Поля:
-- Название;
-- Цвет.
+- name
+- color
 
 ---
 
-# Архитектура проекта
+## Time Tracking
 
-```text
-Client
-   ↓
-FastAPI Core Service
-   ↓
-MySQL Database
-   ↓
-Flask Supporting Service
-```
+Используется для отслеживания времени выполнения задач.
 
-## Core/Business Service — FastAPI
-
-Отвечает за:
-- регистрацию пользователей;
-- авторизацию;
-- CRUD операции;
-- работу с задачами;
-- бизнес-логику.
+Поля:
+- user_id
+- task_id
+- hours_spent
 
 ---
 
-## Supporting Service — Flask
+# Структура базы данных 🛢️
 
-Отвечает за:
-- аналитику;
-- hash endpoint;
-- about endpoint;
-- вспомогательные API.
-
----
-
-# Интерфейс и возможности 🚀
-
-## Drag-and-Drop Kanban
-
-Задачи могут перемещаться между статусами через Kanban board.
-
-```text
-TODO → IN PROGRESS → DONE
-```
-
----
-
-# Роли и доступ 👥
-
-## Пользователь
-
-Имеет доступ:
-- к своим задачам;
-- проектам;
-- тегам;
-- CRUD операциям.
-
----
-
-## Администратор
-
-Имеет доступ:
-- к управлению пользователями;
-- аналитике;
-- системным операциям;
-- ограничению пользователей.
-
----
-
-# Стек технологий
-
-## Backend
-- Python
-- FastAPI
-- Flask
-
-## Database
-- MySQL
-- SQL (без ORM)
-
-## API
-- REST API
-- JWT Authentication
-
-## Additional
-- Git + GitHub
-- Mermaid
-- JSON
-- SHA256
-
----
-
-# Архитектура проекта
-
-```text
-Client
-   ↓
-FastAPI Core Service
-   ↓
-MySQL Database
-   ↓
-Flask Supporting Service
-```
-
-## Основные сущности базы данных
-
+Основные таблицы:
 - users
 - tasks
 - projects
 - tags
 - time_tracking
 
-## Связи
+Связи:
 
 ```text
 users
@@ -230,9 +194,16 @@ users
  └── time_tracking
 ```
 
+Используются:
+- PRIMARY KEY;
+- FOREIGN KEY;
+- CASCADE;
+- SET NULL;
+- AUTO_INCREMENT.
+
 ---
 
-# Основные API endpoints
+# Основные API endpoints 🌐
 
 ## FastAPI
 
@@ -249,6 +220,11 @@ POST /api/login
 ### Получение профиля
 ```http
 GET /api/users/{username}
+```
+
+### Обновление JWT
+```http
+POST /api/users/{username}/refresh-token
 ```
 
 ### CRUD Tasks
@@ -280,7 +256,37 @@ GET /api/v1/supporting/hash/{str}
 
 ---
 
-# Как запустить проект
+# Стек технологий 🛠️
+
+## Backend
+- Python
+- FastAPI
+- Flask
+
+---
+
+## Database
+- MySQL
+- SQL (без ORM)
+
+---
+
+## API
+- REST API
+- JWT Authentication
+
+---
+
+## Additional
+- Git
+- GitHub
+- Mermaid
+- JSON
+- SHA256
+
+---
+
+# Как запустить проект 🚀
 
 ## 1. Клонировать репозиторий
 
@@ -294,13 +300,11 @@ cd Task_manager
 ## 2. Установить зависимости
 
 ### FastAPI
-
 ```bash
 pip install fastapi uvicorn
 ```
 
 ### Flask
-
 ```bash
 pip install flask
 ```
@@ -335,7 +339,7 @@ http://127.0.0.1:5001
 
 ---
 
-# Диаграмма Ганта
+# Диаграмма Ганта 📈
 
 ```mermaid
 gantt
@@ -343,35 +347,35 @@ gantt
     dateFormat YYYY-MM-DD
 
     section Backend
-    FastAPI API :done, 2026-05-01, 5d
-    CRUD System :done, 2026-05-06, 4d
-    JWT Authentication :active, 2026-05-11, 3d
+    FastAPI API               :done, 2026-05-01, 5d
+    CRUD System               :done, 2026-05-06, 4d
+    JWT Authentication        :done, 2026-05-11, 3d
 
     section Supporting Service
-    Flask Service :done, 2026-05-14, 3d
-    Analytics API :done, 2026-05-17, 2d
-    SHA256 Service :done, 2026-05-19, 1d
+    Flask Service             :done, 2026-05-14, 3d
+    Analytics API             :done, 2026-05-17, 2d
+    SHA256 Service            :done, 2026-05-19, 1d
 
     section Database
-    SQL Schema :done, 2026-05-20, 4d
-    Database Relations :done, 2026-05-24, 2d
+    SQL Schema                :done, 2026-05-20, 4d
+    Database Relations        :done, 2026-05-24, 2d
 
     section Final
-    Testing :2026-05-26, 3d
-    Documentation :2026-05-29, 2d
+    Testing                   :done, 2026-05-26, 1d
+    Documentation             :done, 2026-05-26, 1d
 ```
 
 ---
 
-# Git Workflow
+# Git Workflow 🌿
 
 ## Ветки проекта
 
 ```text
 main
- develop
- feature/*
- release/*
+develop
+feature/*
+release/*
 ```
 
 ---
@@ -387,52 +391,60 @@ refactor: improve api structure
 
 ---
 
-# Команда проекта
+# Команда проекта 👨‍💻
 
-| Роль | Ответственность |
-|---|---|
-| Backend Developer | API, JWT, CRUD |
-| Database Engineer | SQL, связи, репликация |
-| Scrum Master / PM | GitHub, задачи, документация |
-| QA | Тестирование API |
-
----
-
-# Scrum Master Responsibilities
-
-- Ведение GitHub Projects
-- Создание Issues
-- Планирование спринтов
-- Контроль commit activity
-- Подготовка документации
-- Контроль выполнения ТЗ
-- Организация командной работы
+| Роль | Ответственность | Никнейм |
+|---|---|---|
+| Backend Developer | API, JWT, CRUD | an-oxidizer / СаняSigmaGucci |
+| Frontend Developer | Интерфейс | DieVox-RuS |
+| Database Engineer | SQL, структура БД | ColonelPavlov / Amelia |
+| Scrum Master | GitHub, документация, организация | CapStarCat |
+| QA Engineer | Тестирование API | Y-M-Are |
 
 ---
 
-# Статус проекта
+# Scrum Master Responsibilities 📌
+
+- Ведение GitHub Projects;
+- Создание Issues;
+- Планирование задач;
+- Контроль commit activity;
+- Подготовка документации;
+- Контроль выполнения ТЗ;
+- Организация командной работы.
+
+---
+
+# Статус проекта 📊
 
 ## Реализовано
-
-- FastAPI service
-- Flask supporting service
-- SQL database schema
-- CRUD endpoints
-- Analytics endpoint
-- SHA256 endpoint
-- About endpoint
-
-## В разработке
-
-- JWT authentication
-- Dashboard
-- Database integration
-- Protected routes
-- Replication
+- FastAPI service;
+- Flask supporting service;
+- SQL database schema;
+- CRUD endpoints;
+- Analytics endpoint;
+- SHA256 endpoint;
+- About endpoint;
+- Role system;
+- Foreign key relations;
+- Time tracking model.
 
 ---
 
-# Лицензия
+## В разработке
+- JWT authentication;
+- Dashboard;
+- Database integration;
+- Protected routes;
+- Replication.
 
-Educational project for Moscow Technology Institute.
+---
 
+# GitHub Activity 📅
+
+Проект разрабатывался с использованием:
+- GitHub commits;
+- feature branches;
+- documentation updates;
+- командной разработки;
+- Scrum workflow.
