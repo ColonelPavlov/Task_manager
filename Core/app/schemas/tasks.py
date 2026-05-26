@@ -9,6 +9,9 @@ class TaskCreate(BaseModel):
     deadline: Optional[datetime] = Field(None, description="Дедлайн выполнения")
     priority: Optional[str] = Field("medium", max_length=20, description="Приоритет")
     status: Optional[str] = Field("new", max_length=20, description="Статус задачи (new, in_progress, done)")
+    project_id: Optional[int] = None
+    tag_id: Optional[int] = None
+
 
 # Схема для обновления статуса задачи [PUT]
 class TaskUpdate(BaseModel):
@@ -17,4 +20,5 @@ class TaskUpdate(BaseModel):
     deadline: Optional[datetime] = Field(None)
     priority: Optional[str] = Field(None, max_length=20)
     status: Optional[str] = Field(None, max_length=20)
-    
+    project_id: Optional[int] = None
+    tag_id: Optional[int] = None

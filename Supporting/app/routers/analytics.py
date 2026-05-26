@@ -51,6 +51,47 @@ def get_analytics():
             "message": str(e),
         }), 500
 
+@analytics_bp.route("/dashboard", methods=["GET"])
+def get_dashboard_data():
+    try:
+        
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            
+            cursor.execute("SELECT u.username, SUM(t.hours_spent) AS total_hours FROM time_tracking t JOIN users u ON t.user_id = u.user_id GROUP BY u.username")
+            hours_data = cursor.fetchall()
+            
+            hours_labels = [row["username"] for row in hours_data]
+            hours_values = [int(row["total_hours"]) for row in hours_data]
+
+            cursor.execute("SELECT status, COUNT(*) AS count_tasks FROM tasks GROUP BY status")
+            status_data = cursor.fetchall()
+            
+            status_labels = [row["status"] for row in status_data]
+            status_values = [int(row["count_tasks"]) for row in status_data]
+
+        connection.close()
+
+        return jsonify({
+            "status": "success",
+            "charts": {
+                "employee_hours": {
+                    "labels": hours_labels,  # ['tester_refresh', 'egor_bd', ...]
+                    "datasets": hours_values  # [12, 45, ...]
+                },
+                "task_statuses": {
+                    "labels": status_labels,  # ['new', 'in_progress', 'done']
+                    "datasets": status_values  # [5, 2, 8]
+                }
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Ошибка сбора данных для дашборда: {str(e)}"
+        }), 500
+
 @analytics_bp.route("/about", methods=["GET"])
 def get_about_info():
     
