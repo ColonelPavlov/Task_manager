@@ -48,3 +48,24 @@
 
 *   **Администратор:**
     *   Администрирование, ограничение пользователей, закрытие проекта (проектов)
+
+
+# Диаграмма Ганта
+
+```mermaid
+gantt
+    title Разработка Task Manager
+    dateFormat YYYY-MM-DD
+
+    section Backend
+    FastAPI API :done, 2026-05-01, 5d
+    CRUD :done, 2026-05-06, 3d
+    Login System :active, 2026-05-10, 2d
+
+    section Flask
+    Flask Service :done, 2026-05-12, 2d
+    SHA256 API :done, 2026-05-14, 1d
+
+    section Final
+    Testing :2026-05-15, 3d
+```
