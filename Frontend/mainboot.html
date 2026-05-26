@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MURKOFF | Таск Менеджер</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      background-image: url('Murkoff.jpg');  
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
+    .bg-murkoff-dark {
+      background-color: rgba(0, 0, 0, 0.6) !important;
+      backdrop-filter: blur(5px);
+      color: #80b670;
+    }
+    .bg-murkoff-light {
+      background-color: rgba(0,0,0,0.5) !important;
+      backdrop-filter: blur(5px);
+    }
+    .kanban-column {
+      min-width: 320px;
+      transition: background-color 0.2s;
+    }
+    .kanban-column.drag-over {
+      background-color: rgba(74, 103, 65, 0.7) !important;
+      border: 2px dashed #4a6741;
+    }
+    .task-card {
+      cursor: grab;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border-left: 4px solid #4a6741;
+    }
+    .task-card:active { cursor: grabbing; }
+    .task-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .priority-high { background-color: #f44336; color: white; }
+    .priority-medium { background-color: #ff9800; color: white; }
+    .priority-low { background-color: #4caf50; color: white; }
+    .tag-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .tag-item.selected {
+      outline: 2px solid white;
+    }
+    .remove-tag {
+      background: rgba(0,0,0,0.3);
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .project-item {
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .project-item:hover {
+      background-color: #4a6741 !important;
+    }
+    .nav-tab {
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .nav-tab:hover {
+      background-color: #4a6741;
+    }
+    .task-card.dragging {
+      opacity: 0.4;
+    }
+    .cursor-grab { cursor: grab; }
+    .cursor-grabbing { cursor: grabbing; }
+  </style>
+</head>
+<body>
+
+
+<nav class="navbar navbar-expand-lg fixed-top" style="background-color: #3a5232;">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand text-white fw-bold fs-3" href="#">MURKOFF TASKS</a>
+    <div class="d-flex gap-3 align-items-center">
+      <div class="nav-tab text-white px-3 py-2 rounded-pill active" data-tab="kanban"> Канбан</div>
+       <div class="nav-tab text-white px-3 py-2 rounded-pill" data-tab="analytics" id="analyticsTabBtn">Аналитика</div>
+      <div class="nav-tab text-white px-3 py-2 rounded-pill" data-tab="profile"> Профиль</div>
+<span class="badge bg-warning text-dark px-3 py-2 rounded-pill" id="userRoleBadge"></span>
+      <button class="btn btn-danger rounded-pill px-4" id="logoutBtn">Выйти</button>
+    </div>
+  </div>
+</nav>
+<div id="kanbanPage">
+  <div class="container-fluid pt-5 mt-4">
+    <div class="row">
+      <div class="col-md-3 col-lg-2 mb-4">
+        <div class="bg-murkoff-dark rounded-4 p-3 sticky-top" style="top: 80px;">
+          <h5 class="text-white mb-3">📁 Проекты</h5>
+          <div id="projectList"></div>
+          <div class="input-group mt-3">
+            <input type="text" id="newProjectName" class="form-control form-control-sm rounded-pill" placeholder="Новый проект...">
+            <button class="btn btn-success btn-sm rounded-pill px-3" onclick="addProject()">➕</button>
+          </div>
+          <hr class="bg-secondary">
+          <h5 class="text-white mb-3">🏷️ Все теги</h5>
+          <div id="allTagsList" class="d-flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+      
+      <div class="col-md-9 col-lg-10">
+        <div class="bg-murkoff-light rounded-4 p-3 mb-3 d-flex justify-content-between align-items-center">
+          <h3 class="text-white mb-0" id="currentProjectTitle">📋 Все задачи</h3>
+          <button class="btn btn-success rounded-pill px-4" onclick="showAddTask()">+ Новая задача</button>
+        </div>
+        <div class="d-flex gap-3 overflow-auto pb-3" id="kanbanBoard" style="min-height: 70vh;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="profilePage" style="display: none;">
+  <div class="container pt-5 mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="bg-murkoff-dark rounded-4 p-5 text-center text-white">
+          <h2> Агент</h2>
+          <p class="mt-3">Логин: <strong id="profileUser"></strong></p>
+          <p>Роль: <strong id="profileRole"></strong></p>
+          <hr class="bg-secondary">
+          <h4>📊 Статистика агента</h4>
+          <p id="profileStats"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="analyticsPage" style="display: none;">
+  <div class="container pt-5 mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-10">
+        <div class="bg-murkoff-dark rounded-4 p-4 text-white">
+          <h2 class="text-center mb-4">📊 Аналитическая панель корпорации Murkoff</h2>
+          
+          <div class="row">
+            <!-- График 1: Столбцы часов (Chart.js) -->
+            <div class="col-md-6 mb-4">
+              <div class="bg-dark rounded-3 p-3 text-center" style="border: 1px solid #4a6741;">
+                <h5 class="mb-3" style="color: #4a6741;">Затрачено часов сотрудниками</h5>
+                <canvas id="hoursChart" style="max-height: 280px;"></canvas>
+              </div>
+            </div>
+            
+            <!-- График 2: Круговая диаграмма статусов (Chart.js) -->
+            <div class="col-md-6 mb-4">
+              <div class="bg-dark rounded-3 p-3 text-center d-flex flex-column align-items-center" style="border: 1px solid #4a6741;">
+                <h5 class="mb-3" style="color: #4a6741;">Распределение задач по статусам</h5>
+                <canvas id="statusesChart" style="max-height: 250px; max-width: 250px;"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- adminPage removed -->
+<div id="adminPage" style="display: none;">
+  <div class="container pt-5 mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="bg-murkoff-dark rounded-4 p-4 text-white">
+          <h2 class="text-center mb-4">👑 Правление</h2>
+          <div class="mb-3">
+            <input type="text" id="searchUserInput" class="form-control rounded-pill" placeholder="🔍 Поиск пользователя по нику...">
+          </div>
+          <p class="text-center">Управление агентами</p>
+          <hr class="bg-secondary">
+          <div id="usersList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="taskModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background-color: #e8f0e6;">
+      <div class="modal-body p-4">
+        <h3 id="taskModalTitle" class="mb-3" style="color: #3a5232;"> Новая задача</h3>
+        <input type="text" id="taskTitle" class="form-control rounded-pill mb-3" placeholder="Название задачи">
+        <textarea id="taskDescription" class="form-control mb-3" rows="3" placeholder="Описание задачи..."></textarea>
+        <input type="datetime-local" id="taskDeadline" class="form-control rounded-pill mb-3">
+        <select id="taskPriority" class="form-select rounded-pill mb-3">
+          <option value="low">🟢 Низкий</option>
+          <option value="medium">🟠 Средний</option>
+          <option value="high">🔴 Высокий</option>
+        </select>
+        <select id="taskProject" class="form-select rounded-pill mb-3">
+          <option value="">Без проекта</option>
+        </select>
+        <label class="fw-bold mb-2"> Теги:</label>
+        <div id="modalTagsList" class="d-flex flex-wrap gap-2 mb-3"></div>
+        <label class="fw-bold mb-2"> Новый тег:</label>
+        <div class="input-group mb-3">
+          <input type="text" id="newTagName" class="form-control rounded-pill" placeholder="Название">
+          <input type="color" id="newTagColor" class="form-control form-control-color rounded-pill" style="width: 50px;" value="#4a6741">
+          <button class="btn btn-success rounded-pill" onclick="addNewTagFromModal()">Добавить</button>
+        </div>
+        <div class="d-flex gap-3 mt-4">
+          <button class="btn btn-secondary rounded-pill flex-fill" data-bs-dismiss="modal">Отмена</button>
+          <button class="btn" style="background-color: #4a6741; color: white; border-radius: 50px; flex: 1;" onclick="saveTask()">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+const API_BASE_URL = 'http://localhost:8000/api';
+
+// --- Auth: токен приходит из querystring ---
+const qs = new URLSearchParams(window.location.search);
+const urlToken = qs.get('access_token');
+const urlAgent = qs.get('agent');
+
+if (urlToken) localStorage.setItem('authToken', urlToken);
+if (urlAgent) localStorage.setItem('agent', urlAgent);
+
+let authToken = localStorage.getItem('authToken');
+
+// ========== БАЗОВЫЕ ПЕРЕМЕННЫЕ ==========
+let agent = localStorage.getItem('agent') || null;
+let tasks = [];
+let projects = [];        // [{project_id, name}]
+let allTags = [];         // [{tag_id, name, color}]
+let currentProjectId = null;
+let editingTaskId = null;
+let chosenTagId = null;
+let dragId = null;
+let taskModal;
+
+const STATUSES = ['todo', 'in_progress', 'done', 'on_hold'];
+const STATUS_NAMES = {
+  new: '📋 Новые',
+  todo: ' Нужно сделать',
+  in_progress: ' В процессе',
+  done: '✅ Готово',
+  on_hold: 'Отложено'
+};
+
+console.log('[mainboot] localStorage.authToken=', localStorage.getItem('authToken'));
+console.log('[mainboot] localStorage.agent=', localStorage.getItem('agent'));
+
+if (!agent) {
+  window.location.href = 'logboot.html';
+}
+
+// если токен отсутствует — возвращаемся на страницу логина
+if (!localStorage.getItem('authToken')) {
+  console.warn('[mainboot] authToken missing -> redirect to logboot.html');
+  window.location.href = 'logboot.html';
+}
+
+if (!localStorage.getItem('authToken')) {
+  console.warn('[mainboot] authToken missing on page load (Bearer will be null).');
+}
+
+// ========== API ЗАПРОСЫ ==========
+async function apiRequest(endpoint, method = 'GET', body = null) {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    console.warn('[auth] No authToken in localStorage', {
+      authToken: localStorage.getItem('authToken'),
+      agent: localStorage.getItem('agent'),
+    });
+    return null;
+  }
+  const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  const options = { method, headers };
+  if (body) options.body = JSON.stringify(body);
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    if (!response.ok) {
+      let errBody = null;
+      try { errBody = await response.json(); } catch(e) { /* ignore */ }
+      console.warn('[apiRequest] non-OK response', { endpoint, method, status: response.status, errBody });
+      return { ok: false, data: errBody || { detail: `HTTP ${response.status}` } };
+    }
+    if (response.status === 401) {
+      localStorage.removeItem('authToken');
+      window.location.href = 'logboot.html';
+      return null;
+    }
+    const data = await response.json();
+    return { ok: response.ok, data: data };
+  } catch (error) {
+    console.error('API Error:', error);
+    return null;
+  }
+}
+
+// ========== ЗАГРУЗКА ДАННЫХ ==========
+async function loadData() {
+  try {
+    // 1. Загружаем задачи
+    const tasksResult = await apiRequest('/tasks', 'GET');
+    if (tasksResult && tasksResult.ok) {
+      tasks = tasksResult.data.tasks || [];
+    }
+
+    // 2. Загружаем проекты (Backend возвращает только имена)
+    // !!! В текущем Backend контракте tasks возвращают project_id,
+    // но GET /projects возвращает только name (без project_id).
+    // Поэтому фронт пока не может корректно сопоставить project_id -> name.
+    // Мы оставляем project_id задач как есть, а отображение будет "Без проекта".
+    const projectsResult = await apiRequest('/projects', 'GET');
+    if (projectsResult && projectsResult.ok) {
+      const projectsArray = projectsResult.data.projects || [];
+      // имена без id, кладём в projects как {project_id:null}
+      projects = projectsArray.map((name) => ({ project_id: null, name: name }));
+    }
+
+    // 3. Загружаем теги (id → tag_id)
+    const tagsResult = await apiRequest('/tags', 'GET');
+
+    if (tagsResult && tagsResult.ok) {
+      const tagsArray = tagsResult.data.tags || [];
+      allTags = tagsArray.map(tag => ({ tag_id: tag.id, name: tag.name, color: tag.color }));
+    }
+    
+    // 4. Загружаем роль пользователя через /users
+    const usersResult = await apiRequest('/users', 'GET');
+    if (usersResult && usersResult.ok && usersResult.data.users) {
+      const currentUser = usersResult.data.users.find(u => u.username === agent);
+      if (currentUser) {
+        const role = currentUser.role || 'user';
+        document.getElementById('userRoleBadge').textContent = role === 'admin' ? '👑 Администратор' : '👤 Пользователь';
+        document.getElementById('profileRole').textContent = role === 'admin' ? 'Администратор' : 'Пользователь';
+        const adminTab = document.getElementById('adminTab');
+        if (adminTab) adminTab.style.display = role === 'admin' ? 'block' : 'none';
+      }
+    }
+    
+    // 5. Отрисовываем UI
+    showProjects();
+    renderAllTags();
+    renderKanban();
+    closeTaskModal?.();
+    refreshStats();
+    updateProjectSelect();
+    
+  } catch (error) {
+    console.error('Ошибка загрузки данных:', error);
+    alert('Не удалось загрузить данные. Проверьте подключение к серверу.');
+  }
+}
+
+// ========== ПРОЕКТЫ ==========
+function showProjects() {
+  const container = document.getElementById('projectList');
+  if (!container) return;
+  let html = `<div class="project-item p-2 rounded mb-1 ${currentProjectId === null ? 'bg-success' : 'bg-secondary bg-opacity-25'}" onclick="selectProject(null)">📋 Все задачи</div>`;
+  for (let p of projects) {
+    html += `<div class="project-item p-2 rounded mb-1 d-flex justify-content-between align-items-center ${currentProjectId === p.project_id ? 'bg-success' : 'bg-secondary bg-opacity-25'}" onclick="selectProject(${p.project_id})">
+      <span>📁 ${safeText(p.name)}</span>
+      <button class="btn btn-sm btn-danger rounded-pill" onclick="event.stopPropagation(); deleteProject(${p.project_id})">🗑️</button>
+    </div>`;
+  }
+  container.innerHTML = html;
+}
+
+function selectProject(projectId) {
+  currentProjectId = projectId;
+  const project = projects.find(p => p.project_id === projectId);
+  document.getElementById('currentProjectTitle').innerHTML = projectId ? `📁 ${safeText(project.name)}` : '📋 Все задачи';
+  showProjects();
+  renderKanban();
+}
+
+async function addProject() {
+  const input = document.getElementById('newProjectName');
+  const name = input.value.trim();
+  if (!name) { alert('Введите название проекта!'); return; }
+  
+  const result = await apiRequest('/projects', 'POST', { name });
+  if (result && result.ok) {
+    const newId = projects.length > 0 ? Math.max(...projects.map(p => p.project_id)) + 1 : 1;
+    projects.push({ project_id: newId, name: name });
+    showProjects();
+    updateProjectSelect();
+    input.value = '';
+  } else {
+    alert('Ошибка при создании проекта');
+  }
+}
+
+async function deleteProject(projectId) {
+  const project = projects.find(p => p.project_id === projectId);
+  if (!project) return;
+  if (!confirm(`Удалить проект "${project.name}"?`)) return;
+  
+  const result = await apiRequest(`/projects/${encodeURIComponent(project.name)}`, 'DELETE');
+  if (result && result.ok) {
+    projects = projects.filter(p => p.project_id !== projectId);
+    (tasks || []).forEach(t => { if (t && t.project_id === projectId) t.project_id = null; });
+    if (currentProjectId === projectId) currentProjectId = null;
+    showProjects();
+    updateProjectSelect();
+    renderKanban();
+  } else {
+    alert('Ошибка при удалении проекта');
+  }
+}
+
+function updateProjectSelect() {
+  const select = document.getElementById('taskProject');
+  if (!select) return;
+  let options = '<option value="">Без проекта</option>';
+  for (let p of projects) options += `<option value="${p.project_id}">${safeText(p.name)}</option>`;
+  select.innerHTML = options;
+}
+
+// ========== ТЕГИ ==========
+function renderAllTags() {
+  const container = document.getElementById('allTagsList');
+  if (!container) return;
+  let html = '';
+  for (let tag of allTags) {
+    html += `<div class="tag-item" style="background-color: ${tag.color}">${safeText(tag.name)}<span class="remove-tag" onclick="deleteTag(${tag.tag_id})">×</span></div>`;
+  }
+  container.innerHTML = html;
+}
+
+function renderModalTagsWithSelection() {
+  const container = document.getElementById('modalTagsList');
+  if (!container) return;
+  let html = '';
+  for (let tag of allTags) {
+    const isSelected = chosenTagId === tag.tag_id;
+    html += `<div class="tag-item ${isSelected ? 'selected' : ''}" style="background-color: ${tag.color}" onclick="toggleTagInTask(${tag.tag_id})">${safeText(tag.name)} ${isSelected ? '✓' : ''}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function toggleTagInTask(tagId) {
+  chosenTagId = chosenTagId === tagId ? null : tagId;
+  renderModalTagsWithSelection();
+}
+
+async function addNewTagFromModal() {
+  const name = document.getElementById('newTagName').value.trim();
+  const color = document.getElementById('newTagColor').value;
+  if (!name) { alert('Введите название тега'); return; }
+
+  const result = await apiRequest('/tags', 'POST', { name, color });
+  if (result && result.ok && result.data && result.data.tag) {
+    const newTag = {
+      tag_id: result.data.tag.id,
+      name: result.data.tag.name,
+      color: result.data.tag.color
+    };
+    allTags.push(newTag);
+    renderAllTags();
+    renderModalTagsWithSelection();
+    document.getElementById('newTagName').value = '';
+  } else {
+    alert('Ошибка при создании тега');
+  }
+}
+
+async function deleteTag(tagId) {
+  const result = await apiRequest(`/tags/${tagId}`, 'DELETE');
+  if (result && result.ok) {
+    allTags = allTags.filter(t => t.tag_id !== tagId);
+    (tasks || []).forEach(t => { if (t && t.tag_id === tagId) t.tag_id = null; });
+    if (chosenTagId === tagId) chosenTagId = null;
+    renderAllTags();
+    renderKanban();
+  } else {
+    alert('Ошибка при удалении тега');
+  }
+}
+
+// ========== КАНБАН ==========
+function renderKanban() {
+  const board = document.getElementById('kanbanBoard');
+  if (!board) return;
+  board.innerHTML = '';
+  
+  let filteredTasks = currentProjectId ? tasks.filter(t => t.project_id === currentProjectId) : tasks;
+  
+  for (let status of STATUSES) {
+    const columnTasks = (filteredTasks || []).filter(t => t && t.status === status);
+
+    const column = document.createElement('div');
+    column.className = 'kanban-column bg-murkoff-dark rounded-4 p-3';
+    column.setAttribute('data-status', status);
+    
+    column.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      column.classList.add('drag-over');
+    });
+    column.addEventListener('dragleave', () => column.classList.remove('drag-over'));
+    column.addEventListener('drop', (e) => {
+      e.preventDefault();
+      column.classList.remove('drag-over');
+      if (dragId !== null) {
+        moveTask(dragId, status);
+        dragId = null;
+      }
+    });
+    
+    column.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-success">
+        <span class="fw-bold text-white fs-5">${STATUS_NAMES[status]}</span>
+        <span class="badge bg-success rounded-pill px-3 py-2">${columnTasks.length}</span>
+      </div>
+      <div class="task-cards" id="column-${status}">
+        ${columnTasks.map(task => renderTaskCard(task)).join('')}
+      </div>
+    `;
+    board.appendChild(column);
+  }
+  
+  document.querySelectorAll('.task-card').forEach(card => {
+    card.setAttribute('draggable', 'true');
+    card.addEventListener('dragstart', (e) => {
+      const tid = card.getAttribute('data-task-id');
+      dragId = tid != null ? parseInt(tid) : null;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      dragId = null;
+    });
+  });
+}
+
+function renderTaskCard(task) {
+  let priorityClass = 'priority-low', priorityText = '🟢 Низкий', borderColor = '#4caf50';
+  if (task.priority === 'high') { priorityClass = 'priority-high'; priorityText = '🔴 Высокий'; borderColor = '#f44336'; }
+  else if (task.priority === 'medium') { priorityClass = 'priority-medium'; priorityText = '🟠 Средний'; borderColor = '#ff9800'; }
+  
+  let deadlineHtml = task.deadline ? `<div class="small text-danger mt-1">⏰ ${new Date(task.deadline).toLocaleString()}</div>` : '';
+  
+  let tagsHtml = '';
+  if (task.tag_id) {
+    const tag = allTags.find(t => t.tag_id === task.tag_id);
+    if (tag) tagsHtml = `<span class="badge me-1" style="background-color: ${tag.color}">${safeText(tag.name)}</span>`;
+  }
+  
+  const project = projects.find(p => p.project_id === task.project_id);
+  const projectName = project ? project.name : 'Без проекта';
+  
+  const taskId = task.task_id;
+  
+  return `<div class="task-card card p-3 mb-2" data-task-id="${taskId}" style="border-left-color: ${borderColor}">
+    <div class="fw-bold">${safeText(task.task_number)}</div>
+    <div class="small text-secondary">${safeText(task.description || 'Нет описания')}</div>
+    ${deadlineHtml}
+    <div class="mt-1"><span class="badge ${priorityClass}">${priorityText}</span></div>
+    <div class="mt-1">${tagsHtml}</div>
+    <div class="small text-success mt-1">📁 ${safeText(projectName)}</div>
+    <div class="mt-2 d-flex gap-2">
+      <button class="btn btn-sm btn-primary rounded-pill" onclick="event.stopPropagation(); openEditTaskModal(${taskId})">✏️ Править</button>
+      <button class="btn btn-sm btn-danger rounded-pill" onclick="event.stopPropagation(); deleteTask(${taskId})">🗑️ Удалить</button>
+    </div>
+  </div>`;
+}
+
+async function refreshBoardFromServer() {
+  // Перезагружаем только то, что нужно для отрисовки канбана
+  await loadData();
+}
+
+async function moveTask(taskId, newStatus) {
+  const result = await apiRequest(`/tasks/${taskId}`, 'PUT', { status: newStatus });
+  console.log('[moveTask] response=', result);
+  if (!result || !result.ok) {
+    const detail = result?.data?.detail || result?.data?.message || 'unknown';
+    alert(`Ошибка при перемещении задачи: ${detail}`);
+    return;
+  }
+
+  if (result && result.data && result.data.task) {
+    const index = tasks.findIndex(t => t.task_id === taskId);
+    if (index !== -1) tasks[index] = result.data.task;
+    renderKanban();
+    refreshStats();
+  } else {
+    alert('Ошибка при перемещении задачи');
+  }
+}
+
+// ========== УПРАВЛЕНИЕ ЗАДАЧАМИ ==========
+function openEditTaskModal(taskId) {
+  const task = tasks.find(t => t.task_id === taskId);
+  if (!task) return;
+  editingTaskId = taskId;
+  chosenTagId = task.tag_id || null;
+  document.getElementById('taskModalTitle').textContent = '✏️ Редактировать задачу';
+  document.getElementById('taskTitle').value = task.task_number;
+  document.getElementById('taskDescription').value = task.description || '';
+  document.getElementById('taskDeadline').value = task.deadline || '';
+  document.getElementById('taskPriority').value = task.priority || 'medium';
+  document.getElementById('taskProject').value = task.project_id || '';
+  renderModalTagsWithSelection();
+  taskModal.show();
+}
+
+function showAddTask() {
+  editingTaskId = null;
+  chosenTagId = null;
+  document.getElementById('taskModalTitle').textContent = '➕ Новая задача';
+  document.getElementById('taskTitle').value = '';
+  document.getElementById('taskDescription').value = '';
+  document.getElementById('taskDeadline').value = '';
+  document.getElementById('taskPriority').value = 'medium';
+  document.getElementById('taskProject').value = '';
+  renderModalTagsWithSelection();
+  taskModal.show();
+}
+
+function closeTaskModal() {
+  taskModal.hide();
+  editingTaskId = null;
+}
+
+async function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  if (!title) { alert('Введите название задачи'); return; }
+
+  const projectIdRaw = document.getElementById('taskProject')?.value;
+  const project_id = projectIdRaw ? projectIdRaw : null;
+  
+  const deadlineRaw = document.getElementById('taskDeadline').value;
+  // backend ожидает datetime (ISO). input[type=datetime-local] даёт строку "YYYY-MM-DDTHH:mm"
+const deadlineIso = deadlineRaw ? new Date(deadlineRaw).toISOString() : null;
+  // сохраняем статус на бэкенде (если фронт не поменял — оставляем как есть)
+
+  console.log('[saveTask] payload=', {
+
+    task_number: title,
+    description: document.getElementById('taskDescription').value,
+    deadline: deadlineIso,
+    priority: document.getElementById('taskPriority').value,
+    // taskProject в UI сейчас не маппится корректно на backend контракт
+    project_id: null,
+    tag_id: chosenTagId,
+    status: editingTaskId ? (tasks.find(t => t.task_id === editingTaskId)?.status || 'new') : 'new',
+  });
+
+
+  const taskData = {
+    task_number: title,
+    description: document.getElementById('taskDescription').value,
+    deadline: deadlineIso,
+    priority: document.getElementById('taskPriority').value,
+    project_id: document.getElementById('taskProject').value ? null : null,
+
+    tag_id: chosenTagId,
+    status: editingTaskId ? (tasks.find(t => t.task_id === editingTaskId)?.status || 'new') : 'new'
+
+  };
+  
+  let result;
+  if (editingTaskId) {
+    result = await apiRequest(`/tasks/${editingTaskId}`, 'PUT', taskData);
+  } else {
+    result = await apiRequest('/tasks', 'POST', taskData);
+  }
+  
+  const taskObj = result?.data?.task || result?.data?.data?.task;
+
+  if (result && result.ok && taskObj) {
+    if (editingTaskId) {
+      const index = tasks.findIndex(t => t.task_id === editingTaskId);
+      if (index !== -1) tasks[index] = result.data.task;
+    } else {
+      tasks.push(result.data.task);
+    }
+    // просто перерисуй доску
+    renderKanban();
+    refreshStats();
+    closeTaskModal();
+  } else {
+    console.error('[saveTask] save failed. result=', result);
+    const detail = result?.data?.detail || result?.data?.message || 'unknown';
+    alert(`Ошибка при сохранении задачи: ${detail}`);
+  }
+}
+
+async function deleteTask(taskId) {
+  if (!confirm('Удалить задачу навсегда?')) return;
+  if (taskId == null || Number.isNaN(Number(taskId))) {
+    console.warn('[deleteTask] invalid taskId=', taskId);
+    return;
+  }
+  const result = await apiRequest(`/tasks/${taskId}`, 'DELETE');
+  if (result && result.ok) {
+    tasks = tasks.filter(t => t.task_id !== taskId);
+    renderKanban();
+    refreshStats();
+  } else {
+    alert('Ошибка при удалении задачи');
+  }
+}
+
+// ========== СТАТИСТИКА ==========
+function refreshStats() {
+  const safeTasks = (tasks || []).filter(t => t && typeof t.status === 'string');
+  const active = safeTasks.filter(t => t.status !== 'done').length;
+  const completed = safeTasks.filter(t => t.status === 'done').length;
+  document.getElementById('profileStats').innerHTML = `${active} в работе, ${completed} выполнено`;
+  document.getElementById('profileUser').innerText = agent;
+}
+
+// ========== АДМИНКА (disabled) ==========
+async function renderAdminPanel() {
+  return;
+  const container = document.getElementById('usersList');
+  if (!container) return;
+  
+  const result = await apiRequest('/users', 'GET');
+  if (!result || !result.ok || !result.data || !result.data.users) {
+    container.innerHTML = '<div class="text-center p-3">❌ Ошибка загрузки пользователей</div>';
+    return;
+  }
+  
+  const users = result.data.users;
+  const searchTerm = document.getElementById('searchUserInput')?.value.toLowerCase() || '';
+  
+  let filteredUsers = users;
+  if (searchTerm) {
+    filteredUsers = users.filter(u => u.username.toLowerCase().includes(searchTerm));
+  }
+  
+  let html = '<h4 class="mb-3">👥 Пользователи</h4>';
+  
+  if (filteredUsers.length === 0) {
+    html += '<div class="text-center p-3">❌ Пользователи не найдены</div>';
+  }
+  
+  for (let u of filteredUsers) {
+    let displayName = safeText(u.username);
+    if (searchTerm && u.username.toLowerCase().includes(searchTerm)) {
+      displayName = displayName.replace(new RegExp(`(${searchTerm})`, 'gi'), '<mark class="highlight">$1</mark>');
+    }
+    
+    html += `<div class="d-flex justify-content-between align-items-center bg-secondary bg-opacity-25 p-3 rounded mb-2">
+      <span>${displayName} (${u.role === 'admin' ? '👑 Админ' : '👤 Пользователь'})</span>
+      <div>
+        ${u.role !== 'admin' ? `<button class="btn btn-warning btn-sm rounded-pill me-2" onclick="makeAdmin('${u.username}')">Сделать админом</button>` : ''}
+        ${u.username !== agent ? `<button class="btn btn-danger btn-sm rounded-pill" onclick="deleteUserAccount('${u.username}')">Удалить</button>` : ''}
+      </div>
+    </div>`;
+  }
+  container.innerHTML = html;
+}
+
+if (document.getElementById('searchUserInput')) {
+  document.getElementById('searchUserInput').addEventListener('input', () => {
+    renderAdminPanel();
+  });
+}
+
+async function makeAdmin(username) {
+  return;
+  const result = await apiRequest(`/users/${username}/make-admin`, 'PUT');
+  if (result && result.ok) {
+    renderAdminPanel();
+    // Обновляем отображение роли
+    const usersResult = await apiRequest('/users', 'GET');
+    if (usersResult && usersResult.ok && usersResult.data.users) {
+      const currentUser = usersResult.data.users.find(u => u.username === agent);
+      if (currentUser) {
+        const role = currentUser.role || 'user';
+        document.getElementById('userRoleBadge').textContent = role === 'admin' ? '👑 Администратор' : '👤 Пользователь';
+        document.getElementById('profileRole').textContent = role === 'admin' ? 'Администратор' : 'Пользователь';
+        document.getElementById('adminTab').style.display = role === 'admin' ? 'block' : 'none';
+      }
+    }
+  } else {
+    alert('Ошибка при назначении админа');
+  }
+}
+
+async function deleteUserAccount(username) {
+  return;
+  if (!confirm(`Удалить пользователя ${username}?`)) return;
+  const result = await apiRequest(`/users/${username}`, 'DELETE');
+  if (result && result.ok) {
+    renderAdminPanel();
+  } else {
+    alert('Ошибка при удалении пользователя');
+  }
+}
+
+// ========== ВКЛАДКИ ==========
+function switchTab(tabName) {
+  document.getElementById('kanbanPage').style.display = tabName === 'kanban' ? 'block' : 'none';
+  document.getElementById('profilePage').style.display = tabName === 'profile' ? 'block' : 'none';
+  document.getElementById('adminPage').style.display = tabName === 'admin' ? 'block' : 'none';
+  // Включаем отображение нашей новой страницы аналитики
+  document.getElementById('analyticsPage').style.display = tabName === 'analytics' ? 'block' : 'none';
+  
+  if (tabName === 'profile') refreshStats();
+  if (tabName === 'admin') renderAdminPanel();
+  // Как только аналитик переходит на вкладку — дёргаем Flask на порту 5001!
+  if (tabName === 'analytics') loadDashboardCharts();
+}
+
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    // Убираем активные классы (поддержка как старого active, так и bg-success)
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active', 'bg-success'));
+    this.classList.add('active', 'bg-success');
+    switchTab(this.dataset.tab);
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('agent');
+  window.location.href = 'logboot.html';
+});
+
+function safeText(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ========== ЗАПУСК ==========
+document.addEventListener('DOMContentLoaded', () => {
+  taskModal = new bootstrap.Modal(document.getElementById('taskModal'));
+});
+
+// ========== АВТОНОМНЫЙ ДАШБОРД (ПОРТ 5001 FLASK) ==========
+async function loadDashboardCharts() {
+    try {
+        console.log("Запрос массивов для диаграмм с Flask...");
+        const res = await fetch('http://localhost:5001/api/v1/supporting/dashboard');
+        const result = await res.json();
+
+        if (result.status === "success") {
+            // 1. Столбчатый график часов сотрудников
+            const ctxHours = document.getElementById('hoursChart');
+            if (ctxHours) {
+                if (window.myHoursChart) { window.myHoursChart.destroy(); }
+                window.myHoursChart = new Chart(ctxHours.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: result.charts.employee_hours.labels,
+                        datasets: [{
+                            label: 'Общее количество часов',
+                            data: result.charts.employee_hours.datasets,
+                            backgroundColor: '#4a6741',
+                            borderColor: '#3b5233',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            // 2. Круговая диаграмма статусов задач
+            const ctxStatuses = document.getElementById('statusesChart');
+            if (ctxStatuses) {
+                if (window.myStatusesChart) { window.myStatusesChart.destroy(); }
+                window.myStatusesChart = new Chart(ctxStatuses.getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels: result.charts.task_statuses.labels,
+                        datasets: [{
+                            data: result.charts.task_statuses.datasets,
+                            backgroundColor: ['#4a6741', '#f44336', '#2196f3', '#ffeb3b']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
+        }
+    } catch (error) {
+        console.error("Ошибка отрисовки дашборда ТЗ:", error);
+    }
+}
+
+
+loadData();
+</script>
+</body>
+</html>
