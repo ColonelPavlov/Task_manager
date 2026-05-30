@@ -14,7 +14,7 @@ class Settings:
     DB_NAME: str = os.getenv("DB_NAME", "change_me")
 
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "dev_secret")
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "dev_secret")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256") # Хрен знает зачем мы храним это в .env
 
     @property
     def DATABASE_URL(self) -> str:

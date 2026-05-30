@@ -20,10 +20,10 @@ async def get_projects(
         current_user_id, current_username = await get_current_user_double_check(db=db, credentials=token)
         
         async with db.cursor() as cursor:
-            await cursor.execute("SELECT name FROM projects WHERE user_id = %s", (current_user_id,))
+            await cursor.execute("SELECT project_id, name FROM projects WHERE user_id = %s", (current_user_id,))
             raw_projects = await cursor.fetchall()
             
-        projects_list = [row[0] for row in raw_projects]
+        projects_list = [{"project_id": row[0], "name": row[1]} for row in raw_projects]
         
         return {
             "status": "success",
@@ -59,10 +59,13 @@ async def create_project(
                 
             insert_query = "INSERT INTO projects (user_id, name) VALUES (%s, %s)"
             await cursor.execute(insert_query, (current_user_id, project_data.name))
-            
+
+            new_project_id = cursor.lastrowid
+
         return {
             "status": "success",
-            "message": f"Проект '{project_data.name}' успешно созданагентом {current_username}!"
+            "message": f"Проект '{project_data.name}' успешно созданагентом {current_username}!",
+            "project_id": new_project_id
         }
     
     except HTTPException: raise
