@@ -10,10 +10,10 @@ analytics_bp = Blueprint("analytics", __name__, url_prefix="/api/v1/supporting")
 
 def get_db_connection():
     return pymysql.connect(
-        host=os.getenv("DB_HOST", "127.0.0.1"),
-        user=os.getenv("DB_USER", "change_me"),
-        password=os.getenv("DB_PASS", "change_me"),
-        database=os.getenv("DB_NAME", "change_me"),
+        host=str(os.getenv("DB_HOST", "127.0.0.1")),
+        user=str(os.getenv("DB_USER", "change_me")),
+        password=str(os.getenv("DB_PASS", "change_me")),
+        database=str(os.getenv("DB_NAME", "change_me")),
         port=int(os.getenv("DB_PORT", 3306)),
         cursorclass=pymysql.cursors.DictCursor
     )
@@ -76,12 +76,12 @@ def get_dashboard_data():
             "status": "success",
             "charts": {
                 "employee_hours": {
-                    "labels": hours_labels,  # ['tester_refresh', 'egor_bd', ...]
-                    "datasets": hours_values  # [12, 45, ...]
+                    "labels": hours_labels,
+                    "datasets": hours_values
                 },
                 "task_statuses": {
-                    "labels": status_labels,  # ['new', 'in_progress', 'done']
-                    "datasets": status_values  # [5, 2, 8]
+                    "labels": status_labels,
+                    "datasets": status_values
                 }
             }
         })

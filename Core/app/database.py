@@ -2,7 +2,7 @@ import aiomysql
 from app.config import settings
 
 # Функция, которая будет выдавать роутам чистое асинхронное соединение с MySQL
-async def get_db():
+async def get_db_connection():
     connection = await aiomysql.connect(
         host=settings.DB_HOST,
         port=int(settings.DB_PORT),

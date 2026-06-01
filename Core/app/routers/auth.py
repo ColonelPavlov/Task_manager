@@ -1,23 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer
-from app.database import get_db
+from app.database import get_db_connection
 from app.schemas.auth import UserRegister
+from app.dal import auth as auth_dal
 from app.auth_utils import hash_password, verify_password, create_access_token
 from app.auth_utils import get_current_user_double_check, create_access_token
 
 router = APIRouter(prefix="/api", tags=["Authentication"])
+security_scheme = HTTPBearer()
 
 
 @router.post("/register")
-async def register_user(user_data: UserRegister, db = Depends(get_db)) -> dict:
+async def register_user(
+    user_data: UserRegister,
+    db = Depends(get_db_connection)
+) -> dict:
     try:
-        # Хэшируем сырой пароль пользователя перед отправкой в базу данных
-        secure_password_hash = hash_password(user_data.password)
 
-        async with db.cursor() as cursor:
-            # Чистый SQL запрос на добавление строки
-            insert_query = "INSERT INTO users (username, password_hash) VALUES (%s, %s)"
-            await cursor.execute(insert_query, (user_data.username, secure_password_hash))
+        await auth_dal.create_user(db, user_data.username, hash_password(user_data.password))
 
         return {
             "status": "success",
@@ -26,7 +26,7 @@ async def register_user(user_data: UserRegister, db = Depends(get_db)) -> dict:
 
     except Exception as e:
         error_msg = str(e)
-        # Перехватываем дубликат юзернейма, чтобы выдать красивый статус 400 вместо падения сервера
+
         if "Duplicate entry" in error_msg:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -38,15 +38,15 @@ async def register_user(user_data: UserRegister, db = Depends(get_db)) -> dict:
         )
 
 @router.post("/login")
-async def login_user(user_data: UserRegister, db = Depends(get_db)) -> dict:
+async def login_user(
+    user_data: UserRegister,
+    db = Depends(get_db_connection)
+) -> dict:
     try:
-        async with db.cursor() as cursor:
-           # Идёт поиск пользователя в базе данных по его username
-           select_query = "SELECT username, password_hash FROM users WHERE username = %s"
-           await cursor.execute(select_query, (user_data.username,))
-           db_user = await cursor.fetchone()
-        # Если пользователя не нашлось в username
-        if not db_user:
+        
+        db_user = await auth_dal.get_user_credentials(db, user_data.username)
+        
+        if not db_user or not verify_password(user_data.password, db_user[1]):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Неверный логин или пароль"
@@ -78,11 +78,13 @@ async def login_user(user_data: UserRegister, db = Depends(get_db)) -> dict:
             detail=f"Ошибка базы данных при входе: {str(e)}"
         )
 
-security_scheme = HTTPBearer()
-
 @router.post("/users/{username}/refresh-token")
-async def refresh_user_token(username: str, db = Depends(get_db), token = Depends(security_scheme)) -> dict:
-    # Запуск Double Check токена
+async def refresh_user_token(
+    username: str,
+    db = Depends(get_db_connection),
+    token = Depends(security_scheme)
+) -> dict:
+
     current_user = await get_current_user_double_check(db=db, credentials=token)
 
     # Проверка совпадает ли имя из токена с тем, что ввели в пути URL

@@ -2,6 +2,7 @@ import jwt
 import bcrypt
 from datetime import datetime, timedelta, timezone
 from app.config import settings
+from app.dal import users as users_dal
 from fastapi import HTTPException, status
 
 
@@ -42,9 +43,7 @@ async def get_current_user_double_check(db, credentials) -> str:
         )
     
     # ЧЕК 2: Быстрый запрос в MySQL
-    async with db.cursor() as cursor:
-        await cursor.execute("SELECT user_id, username FROM users WHERE username = %s", (username,))
-        user_exists = await cursor.fetchone()
+    user_exists = await users_dal.get_user_by_username(db, username)
 
     if not user_exists:
         raise HTTPException(
