@@ -13,7 +13,7 @@ let editingTaskId = null;
 let chosenTagId = null;
 let dragId = null;
 let taskModal;
-let hoursChart, statusesChart;
+let prioritiesChart, statusesChart;
 
 const STATUSES = ['todo', 'in_progress', 'done', 'on_hold'];
 const STATUS_NAMES = {
@@ -94,18 +94,18 @@ function refreshStats() {
 // ======================== АНАЛИТИКА (FLASK) ========================
 async function loadDashboardCharts() {
   try {
-    const response = await fetch(`${FLASK_BASE_URL}/dashboard`);
+    const response = await fetch(`${FLASK_BASE_URL}/dashboard?agent=${encodeURIComponent(agent)}`);
     const result = await response.json();
     if (result.status === 'success') {
-      const hoursCtx = document.getElementById('hoursChart').getContext('2d');
+      const prioritiesCtx = document.getElementById('prioritiesChart').getContext('2d');
       const statusCtx = document.getElementById('statusesChart').getContext('2d');
-      if (hoursChart) hoursChart.destroy();
+      if (prioritiesChart) prioritiesChart.destroy();
       if (statusesChart) statusesChart.destroy();
-      hoursChart = new Chart(hoursCtx, {
+      prioritiesChart = new Chart(prioritiesCtx, {
         type: 'bar',
         data: {
-          labels: result.charts.employee_hours.labels,
-          datasets: [{ label: 'Часы', data: result.charts.employee_hours.datasets, backgroundColor: '#4a6741' }]
+          labels: result.charts.task_priorities.labels,
+          datasets: [{ label: 'Задачи', data: result.charts.task_priorities.datasets, backgroundColor: '#4a6741' }]
         },
         options: { responsive: true, scales: { y: { beginAtZero: true } } }
       });
@@ -135,6 +135,28 @@ function switchTab(tabName) {
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+}
+
+// ======================== ОБНОВЛЕНИЕ ТОКЕНА ========================
+async function refreshToken() {
+  const btn = document.getElementById('refreshTokenBtn');
+  const msg = document.getElementById('refreshTokenMsg');
+  btn.disabled = true;
+  btn.textContent = '⏳ Обновление...';
+  try {
+    const data = await apiRequest(`/users/${encodeURIComponent(agent)}/refresh-token`, 'POST');
+    localStorage.setItem('authToken', data.access_token);
+    authToken = data.access_token;
+    msg.className = 'mt-2 text-success';
+    msg.textContent = '✅ Токен успешно обновлён! Сессия продлена на 12 часов.';
+  } catch (error) {
+    msg.className = 'mt-2 text-danger';
+    msg.textContent = '❌ Ошибка: ' + error.message;
+  } finally {
+    msg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '🔄 Обновить токен';
+  }
 }
 
 // ======================== ИНИЦИАЛИЗАЦИЯ ========================

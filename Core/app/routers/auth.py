@@ -88,7 +88,7 @@ async def refresh_user_token(
     current_user = await get_current_user_double_check(db=db, credentials=token)
 
     # Проверка совпадает ли имя из токена с тем, что ввели в пути URL
-    if username != current_user:
+    if username != current_user[1]: # Нас интересует именно username из кортежа (user_id, username), который возвращает get_current_user_double_check
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Вы не можете обновить токен другого сотрудника!"
