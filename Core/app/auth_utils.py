@@ -1,12 +1,15 @@
+import os
 import jwt
 import bcrypt
 from datetime import datetime, timedelta, timezone
-from app.config import settings
+from app.dal import users as users_dal
 from fastapi import HTTPException, status
+from dotenv import load_dotenv
 
+load_dotenv()
 
-SECRET_KEY = settings.JWT_SECRET_KEY
-ALGORITHM = settings.JWT_ALGORITHM
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev_secret")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256") # Хрен знает зачем мы храним это в .env
 
 
 def hash_password(password: str) -> str:
@@ -42,9 +45,7 @@ async def get_current_user_double_check(db, credentials) -> str:
         )
     
     # ЧЕК 2: Быстрый запрос в MySQL
-    async with db.cursor() as cursor:
-        await cursor.execute("SELECT user_id, username FROM users WHERE username = %s", (username,))
-        user_exists = await cursor.fetchone()
+    user_exists = await users_dal.get_user_by_username(db, username)
 
     if not user_exists:
         raise HTTPException(

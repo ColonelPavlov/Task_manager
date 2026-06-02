@@ -1,292 +1,123 @@
-# Планировщик задач (Task Manager) 📋⏱️
+# Murkoff Task Manager 📋
 
-**Task Manager** — это Full Stack web-приложение с элементами микросервисной архитектуры для управления личными и командными задачами.
-
-Проект помогает:
-- организовывать рабочий процесс;
-- контролировать дедлайны;
-- отслеживать прогресс выполнения задач;
-- управлять проектами и тегами;
-- вести аналитику активности пользователей.
-
-Проект разработан в рамках курса по базам данных и backend-разработке.
-
-Репозиторий проекта:  
-:contentReference[oaicite:0]{index=0}
+**Murkoff Task Manager** — секретный терминал учёта задач и контроля сотрудников Murkoff Corporation. Full Stack web-приложение с элементами микросервисной архитектуры, разработанное в рамках курса Архитектура информационных систем.
 
 ---
 
 # Основные возможности ✨
 
-## Управление задачами
-- Создание задач;
-- Изменение статусов;
-- Установка дедлайнов;
-- Приоритеты задач;
-- Удаление и редактирование задач.
+- Kanban-доска с drag-and-drop и четырьмя статусами задач;
+- создание, редактирование и удаление задач;
+- приоритеты (low / medium / high) и дедлайны;
+- группировка задач по проектам и тегам;
+- JWT авторизация с возможностью обновления токена;
+- аналитическая панель с графиками по задачам текущего пользователя.
 
 ---
 
-## Гибкая организация
-- Группировка задач по проектам;
-- Использование тегов;
-- Фильтрация и сортировка задач.
-
----
-
-## Kanban / Drag-and-Drop
-Система поддерживает Kanban-логику для визуального управления задачами:
+# Архитектура 🏗️
 
 ```text
-TODO → IN PROGRESS → DONE
+Браузер (Vanilla JS + Bootstrap)
+        ↓               ↓
+FastAPI (8000)     Flask (5001)
+        ↓               ↓
+          MySQL Database
 ```
 
-Статусы задач:
-- Нужно сделать;
-- В процессе;
-- Готово;
-- Отложено.
 
----
-
-## Аналитика и Supporting Service
-Flask Supporting Service предоставляет:
-- analytics endpoint;
-- hash endpoint;
-- about endpoint;
-- дополнительные сервисные API.
-
----
-
-## Безопасность
-- JWT авторизация;
-- защищённые роуты;
-- SHA256 hash service;
-- разграничение ролей пользователей.
-
----
-
-# Архитектура проекта 🏗️
-
-```text
-Client
-   ↓
-FastAPI Core Service
-   ↓
-MySQL Database
-   ↓
-Flask Supporting Service
-```
+Два независимых backend-сервиса. Фронт обращается к каждому напрямую.
 
 ---
 
 # Core Service — FastAPI ⚡
 
-Отвечает за:
-- регистрацию пользователей;
-- авторизацию;
-- CRUD операции;
-- работу с задачами;
-- бизнес-логику;
-- JWT.
+Основной сервис. Отвечает за:
+- регистрацию и авторизацию пользователей;
+- JWT (генерация, валидация, обновление);
+- CRUD задач, проектов, тегов;
+- защищённые роуты через HTTPBearer.
+
+Все SQL-запросы вынесены в отдельный модуль `dal/`.
 
 ---
 
 # Supporting Service — Flask 🧩
 
-Отвечает за:
-- аналитику;
-- about endpoint;
-- SHA256 hash service;
-- вспомогательные API.
+Вспомогательный сервис. Отвечает за:
+
+| Эндпоинт | Описание |
+|---|---|
+| `GET /api/v1/supporting/analytics` | Общая статистика системы |
+| `GET /api/v1/supporting/dashboard?agent={username}` | Аналитика задач текущего пользователя |
+| `GET /api/v1/supporting/hash/<str>` | SHA256 хеширование строки |
+| `GET /api/v1/supporting/about` | Данные о проекте из about.json |
+
+Эндпоинты реализованы по требованию ТЗ, на фронте используется только `/dashboard`.
+
+Все SQL-запросы вынесены в отдельный модуль `dal/`.
 
 ---
 
-# Модели данных (Сущности) 🗂️
+# Модели данных 🗂️
 
 ## User
-
-Поля:
-- username
-- password_hash
-- role
-
-Роли:
-- user
-- admin
-
----
-
-## Project
-
-Объединяет задачи в проекты.
-
-Поля:
-- name
-- created_at
-- user_id
-
----
+- `username`, `password_hash`
 
 ## Task
+- `task_number`, `description`, `deadline`, `priority`, `status`, `project_id`, `tag_id`
+- статусы: `todo`, `in_progress`, `done`, `on_hold`
+- приоритеты: `low`, `medium`, `high`
 
-Основная сущность системы.
-
-Поля:
-- title
-- description
-- deadline
-- priority
-- status
-- project_id
-- tag_id
-
-Статусы:
-- new
-- in_progress
-- done
-- delayed
-
-Приоритеты:
-- low
-- medium
-- high
-
----
+## Project
+- `name`, `user_id`, `created_at`
 
 ## Tag
-
-Используется для гибкой категоризации задач.
-
-Поля:
-- name
-- color
+- `name`, `color`, `user_id`, `created_at`
 
 ---
 
-## Time Tracking
-
-Используется для отслеживания времени выполнения задач.
-
-Поля:
-- user_id
-- task_id
-- hours_spent
-
----
-
-# Структура базы данных 🛢️
-
-Основные таблицы:
-- users
-- tasks
-- projects
-- tags
-- time_tracking
-
-Связи:
-
-```text
-users
- ├── projects
- ├── tasks
- ├── tags
- └── time_tracking
-```
-
-Используются:
-- PRIMARY KEY;
-- FOREIGN KEY;
-- CASCADE;
-- SET NULL;
-- AUTO_INCREMENT.
-
----
-
-# Основные API endpoints 🌐
+# API endpoints 🌐
 
 ## FastAPI
 
-### Регистрация
 ```http
-POST /api/register
-```
-
-### Авторизация
-```http
-POST /api/login
-```
-
-### Получение профиля
-```http
-GET /api/users/{username}
-```
-
-### Обновление JWT
-```http
-POST /api/users/{username}/refresh-token
-```
-
-### CRUD Tasks
-```http
-POST /api/tasks
-GET /api/tasks
-PUT /api/tasks/{task_id}
+POST   /api/register
+POST   /api/login
+GET    /api/users/{username}
+POST   /api/users/{username}/refresh-token
+GET    /api/tasks
+POST   /api/tasks
+PUT    /api/tasks/{task_id}
 DELETE /api/tasks/{task_id}
+GET    /api/projects
+POST   /api/projects
+GET    /api/tags
+POST   /api/tags
 ```
 
----
+## Flask
 
-## Flask Supporting Service
-
-### Analytics
 ```http
 GET /api/v1/supporting/analytics
-```
-
-### About
-```http
+GET /api/v1/supporting/dashboard?agent={username}
+GET /api/v1/supporting/hash/<str>
 GET /api/v1/supporting/about
-```
-
-### SHA256 Hash
-```http
-GET /api/v1/supporting/hash/{str}
 ```
 
 ---
 
 # Стек технологий 🛠️
 
-## Backend
-- Python
-- FastAPI
-- Flask
+- **Backend:** Python, FastAPI, Flask
+- **Database:** MySQL, чистый SQL (без ORM)
+- **Frontend:** Vanilla JS, Bootstrap 5, Chart.js
+- **Auth:** JWT, bcrypt
+- **Libs:** aiomysql, pymysql, python-dotenv
 
 ---
 
-## Database
-- MySQL
-- SQL (без ORM)
-
----
-
-## API
-- REST API
-- JWT Authentication
-
----
-
-## Additional
-- Git
-- GitHub
-- Mermaid
-- JSON
-- SHA256
-
----
-
-# Как запустить проект 🚀
+# Как запустить 🚀
 
 ## 1. Клонировать репозиторий
 
@@ -295,156 +126,52 @@ git clone https://github.com/ColonelPavlov/Task_manager
 cd Task_manager
 ```
 
----
+## 2. Развернуть базу данных
 
-## 2. Установить зависимости
+Создать базу данных MySQL и выполнить `script.sql` из корня проекта — он создаст все необходимые таблицы и связи.
 
-### FastAPI
-```bash
-pip install fastapi uvicorn
+## 3. Настроить `.env`
+
+Создать `.env` в папках `Core/` и `Supporting/`:
+
+```env
+DB_USER=your_user
+DB_PASS=your_password
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=your_db
+JWT_SECRET_KEY=your_secret
+JWT_ALGORITHM=HS256
 ```
 
-### Flask
-```bash
-pip install flask
-```
+## 4. Установить зависимости и запустить сервисы
 
----
+Подробная инструкция по настройке виртуальных окружений и запуску обоих сервисов описана в **`DEVELOPMENT-README.md`** в корне проекта.
 
-## 3. Запустить FastAPI
-
-```bash
-uvicorn main:app --reload
-```
-
-Сервис будет доступен:
-
-```text
-http://127.0.0.1:8000
-```
-
----
-
-## 4. Запустить Flask
+Краткий вариант:
 
 ```bash
-python app.py
+# FastAPI (из папки Core/)
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+
+# Flask (из папки Supporting/)
+pip install -r requirements.txt
+python main.py
 ```
 
-Сервис будет доступен:
+## 5. Открыть фронт
 
-```text
-http://127.0.0.1:5001
-```
-
----
-
-# Диаграмма Ганта 📈
-
-```mermaid
-gantt
-    title Разработка Task Manager
-    dateFormat YYYY-MM-DD
-
-    section Backend
-    FastAPI API               :done, 2026-05-01, 5d
-    CRUD System               :done, 2026-05-06, 4d
-    JWT Authentication        :done, 2026-05-11, 3d
-
-    section Supporting Service
-    Flask Service             :done, 2026-05-14, 3d
-    Analytics API             :done, 2026-05-17, 2d
-    SHA256 Service            :done, 2026-05-19, 1d
-
-    section Database
-    SQL Schema                :done, 2026-05-20, 4d
-    Database Relations        :done, 2026-05-24, 2d
-
-    section Final
-    Testing                   :done, 2026-05-26, 1d
-    Documentation             :done, 2026-05-26, 1d
-```
-
----
-
-# Git Workflow 🌿
-
-## Ветки проекта
-
-```text
-main
-develop
-feature/*
-release/*
-```
-
----
-
-## Формат commit сообщений
-
-```text
-feat: add jwt authentication
-fix: resolve login bug
-docs: update readme
-refactor: improve api structure
-```
+Открыть `Frontend/logboot.html` в браузере.
 
 ---
 
 # Команда проекта 👨‍💻
 
-| Роль | Ответственность | Никнейм |
-|---|---|---|
-| Backend Developer | API, JWT, CRUD | an-oxidizer / СаняSigmaGucci |
-| Frontend Developer | Интерфейс | DieVox-RuS |
-| Database Engineer | SQL, структура БД | ColonelPavlov / Amelia |
-| Scrum Master | GitHub, документация, организация | CapStarCat |
-| QA Engineer | Тестирование API | Y-M-Are |
-
----
-
-# Scrum Master Responsibilities 📌
-
-- Ведение GitHub Projects;
-- Создание Issues;
-- Планирование задач;
-- Контроль commit activity;
-- Подготовка документации;
-- Контроль выполнения ТЗ;
-- Организация командной работы.
-
----
-
-# Статус проекта 📊
-
-## Реализовано
-- FastAPI service;
-- Flask supporting service;
-- SQL database schema;
-- CRUD endpoints;
-- Analytics endpoint;
-- SHA256 endpoint;
-- About endpoint;
-- Role system;
-- Foreign key relations;
-- Time tracking model.
-
----
-
-## В разработке
-- JWT authentication;
-- Dashboard;
-- Database integration;
-- Protected routes;
-- Replication.
-
----
-
-# GitHub Activity 📅
-
-Проект разрабатывался с использованием:
-- GitHub commits;
-- feature branches;
-- documentation updates;
-- командной разработки;
-- Scrum workflow.
+| Роль | Никнейм |
+|---|---|
+| Lead Scrum Master | CapStarCat |
+| QA Engineer | Y-M-Are |
+| Backend Engineer | an-oxidizer |
+| Database Engineer | ColonelPavlov |
+| Frontend Engineer | DieVox-Rus |
