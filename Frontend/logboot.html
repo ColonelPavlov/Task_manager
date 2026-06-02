@@ -1,134 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Вход | MURKOFF</title>  
+  <title>Вход | MURKOFF</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>  
-
-    body {
-      background-image: url('Murkoff.jpg');  
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh; 
-    }
-    .hero-content {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: white;
-      width: 80%;
-      max-width: 800px;
-      z-index: 1;
-    }
-    .hero-content h1 {
-      font-size: 56px;
-      margin-bottom: 20px;
-      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
-    }
-    .hero-content p {
-      font-size: 22px;
-      margin-bottom: 40px;
-      text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
-    }
-    .btn-murkoff-login {
-      background-color: #4a6741;
-      color: white;
-      border: 2px solid #4a6741;
-      padding: 12px 40px;
-      border-radius: 50px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    .btn-murkoff-login:hover {
-      background-color: #3a5232;
-      transform: scale(1.05);
-    }
-    .btn-murkoff-register {
-      background-color: transparent;
-      color: white;
-      border: 2px solid white;
-      padding: 12px 40px;
-      border-radius: 50px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    .btn-murkoff-register:hover {
-      background-color: white;
-      color: #4a6741;
-      transform: scale(1.05);
-    }
-    .modal-content {
-      background-color: #e8f0e6;
-      border-radius: 15px;
-    }
-    .modal-content h1 {
-      color: #3a5232;
-    }
-    .form-control {
-      border-radius: 25px;
-      padding: 12px 15px;
-    }
-    .form-control:focus {
-      box-shadow: 0 0 5px #4a6741;
-      border-color: #4a6741;
-    }
-    .btn-cancel {
-      background-color: #f44336;
-      color: white;
-      border-radius: 50px;
-      padding: 10px 20px;
-    }
-    .btn-cancel:hover {
-      background-color: #d32f2f;
-    }
-    .btn-success-custom {
-      background-color: white;
-      color: #4a6741;
-      border: 1px solid #4a6741;
-      border-radius: 50px;
-      padding: 10px 20px;
-    }
-    .btn-success-custom:hover {
-      background-color: #4a6741;
-      color: white;
-    }
-    .error-message {
-      color: #f44336;
-      background-color: rgba(244,67,54,0.1);
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-    }
-    .success-message {
-      color: #4caf50;
-      background-color: rgba(76,175,80,0.1);
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-    }
-  </style>
+  <link rel="stylesheet" href="styles/logboot.css">
 </head>
 <body>
-
 
 <div class="hero-content">
   <h1>Добро пожаловать</h1>
   <p>Присоединяйся к MURKOFF и открой для себя новые возможности</p>
-  <div>   
+  <div>
     <button class="btn btn-murkoff-login me-3" onclick="openLoginModal()">Вход</button>
     <button class="btn btn-murkoff-register" onclick="openRegisterModal()">Регистрация</button>
   </div>
-</div>   
+</div>
 
-
+<!-- Модалка входа -->
 <div class="modal fade" id="loginModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">   
+    <div class="modal-content">
       <div class="modal-body p-4">
         <h1 class="text-center mb-4">Вход</h1>
         <div id="loginError" class="error-message" style="display: none;"></div>
@@ -140,16 +31,16 @@
           <label class="form-label">Пароль</label>
           <input type="password" id="loginPassword" class="form-control" placeholder="Введите пароль">
         </div>
-        <div class="d-flex gap-3">   
+        <div class="d-flex gap-3">
           <button type="button" class="btn btn-cancel flex-fill" data-bs-dismiss="modal">Отмена</button>
           <button type="button" class="btn btn-success-custom flex-fill" onclick="login()">Войти</button>
         </div>
       </div>
     </div>
   </div>
-</div>  
+</div>
 
-
+<!-- Модалка регистрации -->
 <div class="modal fade" id="registerModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -157,7 +48,7 @@
         <h1 class="text-center mb-4">Регистрация</h1>
         <div id="registerError" class="error-message" style="display: none;"></div>
         <div id="registerSuccess" class="success-message" style="display: none;"></div>
-        <div class="mb-3">   
+        <div class="mb-3">
           <label class="form-label">Логин</label>
           <input type="text" id="regUsername" class="form-control" placeholder="Придумайте логин">
         </div>
@@ -172,122 +63,13 @@
         <div class="d-flex gap-3">
           <button type="button" class="btn btn-cancel flex-fill" data-bs-dismiss="modal">Отмена</button>
           <button type="button" class="btn btn-success-custom flex-fill" onclick="register()">Зарегистрироваться</button>
-        </div>  
+        </div>
       </div>
     </div>
   </div>
-</div>  
-
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-
-let loginWin = document.getElementById('loginModal');
-let regWin = document.getElementById('registerModal');
-let loginModal = new bootstrap.Modal(loginWin);
-let registerModal = new bootstrap.Modal(regWin);
-
-function openLoginModal() {
-  document.getElementById('loginError').style.display = 'none';
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
-  loginModal.show();
-}
-
-function openRegisterModal() {
-  document.getElementById('registerError').style.display = 'none';
-  document.getElementById('registerSuccess').style.display = 'none';
-  document.getElementById('regUsername').value = '';
-  document.getElementById('regPassword').value = '';
-  document.getElementById('regPasswordRepeat').value = '';
-  registerModal.show();
-}
-
-async function login() {
-  const username = document.getElementById('loginUsername').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const errorDiv = document.getElementById('loginError');
-  
-  if (!username || !password) {
-    errorDiv.textContent = 'Заполните все поля!';
-    errorDiv.style.display = 'block';
-    return;
-  }
-  
-  try {
-    const response = await fetch('http://localhost:8000/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok && data.access_token) {
-      localStorage.setItem('authToken', data.access_token);
-      localStorage.setItem('agent', username);
-      console.log('[login] saved authToken=', localStorage.getItem('authToken'), 'len=', (localStorage.getItem('authToken')||'').length);
-      console.log('[login] saved agent=', localStorage.getItem('agent'));
-
-      // Передаём токен через querystring, чтобы исключить проблему localStorage между страницами
-      const url = `mainboot.html?access_token=${encodeURIComponent(data.access_token)}&agent=${encodeURIComponent(username)}`;
-      await new Promise(r => setTimeout(r, 0));
-      window.location.href = url;
-    } else {
-      errorDiv.textContent = data.message || 'Неверный логин или пароль!';
-      errorDiv.style.display = 'block';
-    }
-  } catch (error) {
-    errorDiv.textContent = 'Ошибка подключения к серверу';
-    errorDiv.style.display = 'block';
-  }
-}
-
-async function register() {
-  const username = document.getElementById('regUsername').value.trim();
-  const password = document.getElementById('regPassword').value;
-  const passwordRepeat = document.getElementById('regPasswordRepeat').value;
-  const errorDiv = document.getElementById('registerError');
-  const successDiv = document.getElementById('registerSuccess');
-  
-  if (!username || !password || !passwordRepeat) {
-    errorDiv.textContent = 'Заполните все поля!';
-    errorDiv.style.display = 'block';
-    return;
-  }
-  
-  if (password !== passwordRepeat) {
-    errorDiv.textContent = 'Пароли не совпадают!';
-    errorDiv.style.display = 'block';
-    return;
-  }
-  
-  try {
-    const response = await fetch('http://localhost:8000/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      successDiv.textContent = 'Регистрация успешна! Теперь войдите.';
-      successDiv.style.display = 'block';
-      setTimeout(() => {
-        registerModal.hide();
-        openLoginModal();
-      }, 1500);
-    } else {
-      errorDiv.textContent = data.message || 'Ошибка регистрации';
-      errorDiv.style.display = 'block';
-    }
-  } catch (error) {
-    errorDiv.textContent = 'Ошибка подключения к серверу. Запусти бэкенд!';
-    errorDiv.style.display = 'block';
-  }
-}
-</script>
+<script src="scripts/logboot.js"></script>
 </body>
 </html>

@@ -1,0 +1,113 @@
+:root {
+    --color-primary: #4a6741;
+    --color-primary-dark: #3a5232;
+    --color-danger: #f44336;
+    --color-warning: #ff9800;
+    --color-ok: #4caf50;
+}
+
+/* Layout */
+body {
+    background-image: url('../Murkoff.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* Panels */
+.bg-murkoff-dark {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(5px);
+    color: #80b670;
+}
+.bg-murkoff-light {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(5px);
+}
+
+/* Navigation */
+.nav-tab {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.nav-tab:hover {
+    background-color: var(--color-primary);
+}
+
+/* Kanban Board */
+.kanban-column {
+    min-width: 320px;
+    transition: background-color 0.2s;
+}
+.kanban-column.drag-over {
+    background-color: rgba(74, 103, 65, 0.7) !important;
+    border: 2px dashed var(--color-primary);
+}
+
+/* Task Card */
+.task-card {
+    cursor: grab;
+    border-left: 4px solid var(--color-primary);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.task-card:active {
+    cursor: grabbing;
+}
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+.task-card.dragging {
+    opacity: 0.4;
+}
+
+/* Priority Badges */
+.priority-high { background-color: var(--color-danger); color: white; }
+.priority-medium { background-color: var(--color-warning); color: white; }
+.priority-low { background-color: var(--color-ok); color: white; }
+
+/* Tags */
+.tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.tag-item.selected {
+    outline: 2px solid white;
+}
+.remove-tag {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* Projects sidebar */
+.project-item {
+    cursor: pointer;
+    transition: 0.2s;
+}
+.project-item:hover {
+    background-color: var(--color-primary) !important;
+}
+
+/* Task modal */
+.modal-content {
+    background-color: #e8f0e6;
+    border-radius: 15px;
+}
+.modal-content h3 {
+    color: var(--color-primary-dark);
+}

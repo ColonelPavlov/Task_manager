@@ -1,7 +1,8 @@
 import os
 import json
 import pymysql
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
+from app.dal.analytics import get_total_users, get_total_tasks, get_task_priorities_by_user, get_task_statuses_by_user
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,14 +25,8 @@ def get_analytics():
         connection = get_db_connection()
         with connection.cursor() as cursor:
 
-            cursor.execute("SELECT COUNT(*) AS total FROM users")
-            total_users = cursor.fetchone()["total"]
-
-            cursor.execute("SELECT SUM(hours_spent) AS total_hours FROM time_tracking")
-            result_hours = cursor.fetchone()
-            total_hours = result_hours["total_hours"] if result_hours and result_hours["total_hours"] else 0
-
-            cursor.execute("SELECT COUNT(*) AS total_tasks FROM tasks")
+            total_users = get_total_users(cursor)
+            total_tasks = get_total_tasks(cursor)
             total_tasks = cursor.fetchone()["total_tasks"]
 
         connection.close()
@@ -39,7 +34,6 @@ def get_analytics():
         return jsonify({
             "status": "success",
             "total_employees": total_users,
-            "total_hours_spent": total_hours,
             "total_tasks_created": total_tasks,
             "system_status": "SECURE",
             "security_breaches_detected": 0
@@ -53,35 +47,31 @@ def get_analytics():
 
 @analytics_bp.route("/dashboard", methods=["GET"])
 def get_dashboard_data():
+    agent = request.args.get("agent")
+    if not agent:
+        return jsonify({
+            "status": "error",
+            "message": "Не передан agent"
+        }), 400
+
     try:
-        
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            
-            cursor.execute("SELECT u.username, SUM(t.hours_spent) AS total_hours FROM time_tracking t JOIN users u ON t.user_id = u.user_id GROUP BY u.username")
-            hours_data = cursor.fetchall()
-            
-            hours_labels = [row["username"] for row in hours_data]
-            hours_values = [int(row["total_hours"]) for row in hours_data]
-
-            cursor.execute("SELECT status, COUNT(*) AS count_tasks FROM tasks GROUP BY status")
-            status_data = cursor.fetchall()
-            
-            status_labels = [row["status"] for row in status_data]
-            status_values = [int(row["count_tasks"]) for row in status_data]
+            priority_data = get_task_priorities_by_user(cursor, agent)
+            status_data = get_task_statuses_by_user(cursor, agent)
 
         connection.close()
 
         return jsonify({
             "status": "success",
             "charts": {
-                "employee_hours": {
-                    "labels": hours_labels,  # ['tester_refresh', 'egor_bd', ...]
-                    "datasets": hours_values  # [12, 45, ...]
+                "task_priorities": {
+                    "labels": [row["priority"] for row in priority_data],
+                    "datasets": [int(row["count_tasks"]) for row in priority_data]
                 },
                 "task_statuses": {
-                    "labels": status_labels,  # ['new', 'in_progress', 'done']
-                    "datasets": status_values  # [5, 2, 8]
+                    "labels": [row["status"] for row in status_data],
+                    "datasets": [int(row["count_tasks"]) for row in status_data]
                 }
             }
         })
